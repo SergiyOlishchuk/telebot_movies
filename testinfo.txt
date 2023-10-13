@@ -1,0 +1,62 @@
+db.fill_movie_table([
+    {
+        'name' : 'name1',
+        'genre' : 'genre1',
+        'year' : 1,
+        'link' : 'link1'
+    },
+    {
+        'name' : 'name2',
+        'genre' : 'genre2',
+        'year' : 2,
+        'link' : 'link2'
+    },
+    {
+        'name' : 'name3',
+        'genre' : 'genre3',
+        'year' : 3,
+        'link' : 'link3'
+    },
+    {
+        'name' : 'name4',
+        'genre' : 'genre1',
+        'year' : 2,
+        'link' : 'link4'
+    },
+    {
+        'name' : 'name5',
+        'genre' : 'genre3',
+        'year' : 1,
+        'link' : 'link5'
+    },
+    {
+        'name' : 'name6',
+        'genre' : 'genre2',
+        'year' : 1,
+        'link' : 'link6'
+    },
+    {
+        'name' : 'name7',
+        'genre' : 'genre1',
+        'year' : 3,
+        'link' : 'link7'
+    },
+    {
+        'name' : 'name8',
+        'genre' : 'genre1',
+        'year' : 1,
+        'link' : 'link8'
+    },
+    {
+        'name' : 'name9',
+        'genre' : 'genre2',
+        'year' : 3,
+        'link' : 'link9'
+    },
+    {
+        'name' : 'name10',
+        'genre' : 'genre3',
+        'year' : 2,
+        'link' : 'link10'
+    }
+    ])
