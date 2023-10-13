@@ -86,7 +86,29 @@ async def process_callback_movie_year(call: types.CallbackQuery):
     await bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
     await bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=f'{call.message.text}\n\nФільм за жанром')
 
+    selected_genres[call.from_user.id] = []
+
     await bot.send_message(call.message.chat.id, genres_text, reply_markup=genres_inline_keyboard)
+
+@dp.callback_query_handler(lambda c: c.data and c.data.startswith('genre'))
+async def process_genres(call: types.CallbackQuery):
+    call_genre = call.data.split(' ', maxsplit=2)[-1]
+
+    if call_genre == 'ready':
+        await bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
+        await bot.send_message(call.message.chat.id, str(selected_genres[call.from_user.id]))
+    else:
+        user_id = call.from_user.id
+        if call_genre in selected_genres[user_id]:
+            selected_genres[user_id].remove(call_genre)
+        else:
+            selected_genres[user_id].append(call_genre)
+        
+        new_genres_text = genres_text + '\nВибрані вами жанри: '
+        for selected in selected_genres[user_id]:
+            new_genres_text += selected + ', '
+        new_genres_text = new_genres_text[:-2]
+        await bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=new_genres_text, reply_markup=genres_inline_keyboard)
 
 @dp.callback_query_handler(lambda c: c.data and c.data.startswith('movie'))
 async def process_callback_movie(call: types.CallbackQuery):
