@@ -31,6 +31,10 @@ class DataBase:
             )
         self._con.commit()
 
+    def add_movie(self, movie):
+        self._cur.execute('INSERT INTO movies (name, genre, year, link) VALUES (?, ?, ?, ?)', (movie['name'], movie['genre'], movie['year'], movie['link']))
+        self._con.commit()
+
     def update_movie_table(self, movie) -> bool:
         self._cur.execute("""
             SELECT * FROM movies
@@ -43,6 +47,7 @@ class DataBase:
             ''', (movie['name'], movie['genre'], movie['year'], movie['link']))
         else:
             return False
+        return True
 
     
     def get_movies(self, genres : tuple = None, years : tuple = None) -> list:
