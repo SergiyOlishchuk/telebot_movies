@@ -8,6 +8,8 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 
+from database import DataBase
+
 from emoji import emojize
 
 from config import TOKEN
@@ -16,6 +18,9 @@ storage = MemoryStorage()
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher(bot, storage=storage)
+
+db = DataBase()
+selected_movies = {}
 
 class FSMYear(StatesGroup):
     years = State()
@@ -79,7 +84,10 @@ async def process_years(message: types.Message, state: FSMContext):
     await state.finish()
 
     await bot.send_message(message.from_user.id, 'Дякую!')
-    await bot.send_message(message.from_user.id, str(years[message.from_user.id]))
+    selected_movies[message.from_user.id] = db.get_random_movies(1, years=tuple(years[message.from_user.id]))[0]
+
+    await bot.send_message(message.from_user.id, f'Назва: {selected_movies[message.from_user.id][0]}\nЖанр: {selected_movies[message.from_user.id][1]}\nРік: {selected_movies[message.from_user.id][2]}\nПосилання: {selected_movies[message.from_user.id][3]}')
+    del selected_movies[message.from_user.id]
 
 @dp.callback_query_handler(lambda c: c.data and c.data == 'movie genre')
 async def process_callback_movie_year(call: types.CallbackQuery):
@@ -94,11 +102,18 @@ async def process_callback_movie_year(call: types.CallbackQuery):
 async def process_genres(call: types.CallbackQuery):
     call_genre = call.data.split(' ', maxsplit=2)[-1]
 
+    user_id = call.from_user.id
+
     if call_genre == 'ready':
         await bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
-        await bot.send_message(call.message.chat.id, str(selected_genres[call.from_user.id]))
+        if len(selected_genres[user_id]) > 0:
+            selected_movies[user_id] = db.get_random_movies(1, genres=tuple(selected_genres[user_id]))[0] 
+            await bot.send_message(user_id, f'Назва: {selected_movies[user_id][0]}\nЖанр: {selected_movies[user_id][1]}\nРік: {selected_movies[user_id][2]}\nПосилання: {selected_movies[user_id][3]}')
+            del selected_movies[user_id]
+        else:
+            await bot.send_message(call.message.chat.id, 'Ви не вибрали жанри(')
+
     else:
-        user_id = call.from_user.id
         if call_genre in selected_genres[user_id]:
             selected_genres[user_id].remove(call_genre)
         else:

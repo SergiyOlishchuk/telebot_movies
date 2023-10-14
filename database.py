@@ -59,8 +59,8 @@ class DataBase:
         if genres:
             genres_tuple_str = '('
             for genre in genres:
-                genres_tuple_str += f"'{genre}', "
-            sql_request += 'WHERE genre IN ' + genres_tuple_str[:-2] + ') '
+                genres_tuple_str += f"LOWER('{genre}'), "
+            sql_request += 'WHERE LOWER(genre) IN ' + genres_tuple_str[:-2] + ') '
 
 
         if years:
