@@ -125,6 +125,16 @@ async def process_genres(call: types.CallbackQuery):
         new_genres_text = new_genres_text[:-2]
         await bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=new_genres_text, reply_markup=genres_inline_keyboard)
 
+@dp.callback_query_handler(lambda c: c.data and c.data == 'movie all')
+async def process_callback_movie_all(call: types.CallbackQuery):
+    await bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
+    await bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=f'{call.message.text}\n\nВипадковий фільм')
+
+    user_id = call.from_user.id
+    selected_movies[user_id] = db.get_random_movies(1)[0]
+    await bot.send_message(user_id, f'Назва: {selected_movies[user_id][0]}\nЖанр: {selected_movies[user_id][1]}\nРік: {selected_movies[user_id][2]}\nПосилання: {selected_movies[user_id][3]}')
+    del selected_movies[user_id]
+
 @dp.callback_query_handler(lambda c: c.data and c.data.startswith('movie'))
 async def process_callback_movie(call: types.CallbackQuery):
     type = call.data.split(' ')[-1]
