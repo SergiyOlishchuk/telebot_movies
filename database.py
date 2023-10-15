@@ -82,6 +82,16 @@ class DataBase:
             return None
 
         return movies
+
+    def get_genres(self):
+        self._cur.execute('SELECT DISTINCT genre FROM movies')
+        genres = [el[0] for el in self._cur.fetchall()]
+        return genres
+    
+    def get_years(self):
+        self._cur.execute('SELECT DISTINCT year FROM movies ORDER BY year DESC')
+        years = [el[0] for el in self._cur.fetchall()]
+        return years
     
     def __del__(self):
         self._cur.close()
@@ -89,7 +99,7 @@ class DataBase:
 
 def main():
     db = DataBase()
-    print(db.get_random_movies(5, genres=('Бойовики', 'Трилери'), years=('2022',  '2023')))
+    print(db.get_years())
 
 if __name__ == '__main__':
     main()

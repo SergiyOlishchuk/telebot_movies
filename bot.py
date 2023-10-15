@@ -22,18 +22,13 @@ dp = Dispatcher(bot, storage=storage)
 db = DataBase()
 selected_movies = {}
 
-class FSMYear(StatesGroup):
-    years = State()
-
-years = {}
-
 movies_inline_keyboard = InlineKeyboardMarkup()
 movies_inline_keyboard.add(InlineKeyboardButton('Повністю випадковий фільм', callback_data='movie all'))
 movies_inline_keyboard.row(InlineKeyboardButton('Фільм за жанром', callback_data='movie genre'), InlineKeyboardButton('Фільм за роками', callback_data='movie year'))
 movies_inline_keyboard.add(InlineKeyboardButton('Фільм за всіма параметрами', callback_data='movie special'))
 
 
-genres = ['Комедії', 'Бойовики', 'Детективи', 'Арт-хаус', 'Мелодрами', 'Трилери', 'Жахи', 'Мюзикли', 'Вестерни', 'Пригоди', 'Спортивні', 'Фантастика', 'Кримінал', 'Драми', 'Короткометражні', 'Біографія', 'Військові', 'Історія', 'Документальні', '18+', 'Сімейні', 'Аніме', 'Дитячі', 'Екранізація', 'Анімація', 'Комікси', 'Фентезі']
+genres = db.get_genres()
 genres_btns = [InlineKeyboardButton(genre, callback_data=f'genre {genre}') for genre in genres]
 genres_inline_keyboard = InlineKeyboardMarkup()
 
@@ -44,6 +39,18 @@ genres_inline_keyboard.add(InlineKeyboardButton('Готово', callback_data='g
 
 selected_genres = {}
 genres_text = 'Виберіть протрібні вам жанри'
+
+years = db.get_years()
+years_btns = [InlineKeyboardButton(year, callback_data=f'year {year}') for year in years]
+years_inline_keyboard = InlineKeyboardMarkup()
+
+for i in range(0, len(years_btns), 5):
+    years_inline_keyboard.row(*years_btns[i:i+5])
+
+years_inline_keyboard.add(InlineKeyboardButton('Готово', callback_data='year ready'))
+
+selected_years = {}
+years_text = 'Виберіть потрібні вам роки'
 
 @dp.message_handler(commands=['start'])
 async def start_command(message: types.Message):
@@ -60,34 +67,13 @@ async def find_movie(message: types.Message):
 @dp.callback_query_handler(lambda c: c.data and c.data == 'movie year', state=None)
 async def process_callback_movie_year(call: types.CallbackQuery):
     await bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
-    await bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=f'{call.message.text}\n\nФільм за роком')
+    await bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=f'{call.message.text}\n\nФільм за за роком')
 
-    await FSMYear.years.set()
-    await bot.send_message(call.message.chat.id, 'Введіть потрібні роки через кому')
-
-@dp.message_handler(Text(equals='відміна', ignore_case=True), state='*')
-async def cancel_year_state(message: types.Message, state: FSMContext):
-    current_state = await state.get_state()
-    if current_state is None:
-        return
-    await state.finish()
-    await message.answer('OK')
-
-@dp.message_handler(content_types=['text'], state=FSMYear.years)
-async def process_years(message: types.Message, state: FSMContext):
-    async with state.proxy() as data:
-        data['years'] = message.text
+    selected_years[call.from_user.id] = []
     
-    async with state.proxy() as data:
-        years[message.from_user.id] = [el.strip() for el in data['years'].split(',')]
-    
-    await state.finish()
+    await bot.send_message(call.message.chat.id, years_text, reply_markup=years_inline_keyboard)
 
-    await bot.send_message(message.from_user.id, 'Дякую!')
-    selected_movies[message.from_user.id] = db.get_random_movies(1, years=tuple(years[message.from_user.id]))[0]
 
-    await bot.send_message(message.from_user.id, f'Назва: {selected_movies[message.from_user.id][0]}\nЖанр: {selected_movies[message.from_user.id][1]}\nРік: {selected_movies[message.from_user.id][2]}\nПосилання: {selected_movies[message.from_user.id][3]}')
-    del selected_movies[message.from_user.id]
 
 @dp.callback_query_handler(lambda c: c.data and c.data == 'movie genre')
 async def process_callback_movie_year(call: types.CallbackQuery):
@@ -97,6 +83,33 @@ async def process_callback_movie_year(call: types.CallbackQuery):
     selected_genres[call.from_user.id] = []
 
     await bot.send_message(call.message.chat.id, genres_text, reply_markup=genres_inline_keyboard)
+
+@dp.callback_query_handler(lambda c: c.data and c.data.startswith('year'))
+async def process_genres(call: types.CallbackQuery):
+    call_year = call.data.split(' ', maxsplit=2)[-1]
+
+    user_id = call.from_user.id
+
+    if call_year == 'ready':
+        await bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
+        if len(selected_years[user_id]) > 0:
+            selected_movies[user_id] = db.get_random_movies(1, years=tuple(selected_years[user_id]))[0] 
+            await bot.send_message(user_id, f'Назва: {selected_movies[user_id][0]}\nЖанр: {selected_movies[user_id][1]}\nРік: {selected_movies[user_id][2]}\nПосилання: {selected_movies[user_id][3]}')
+            del selected_movies[user_id]
+        else:
+            await bot.send_message(call.message.chat.id, 'Ви не вибрали жанри(')
+
+    else:
+        if call_year in selected_years[user_id]:
+            selected_years[user_id].remove(call_year)
+        else:
+            selected_years[user_id].append(call_year)
+        
+        new_years_text = years_text + '\nВибрані вами роки: '
+        for selected in selected_years[user_id]:
+            new_years_text += selected + ', '
+        new_years_text = new_years_text[:-2]
+        await bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=new_years_text, reply_markup=years_inline_keyboard)
 
 @dp.callback_query_handler(lambda c: c.data and c.data.startswith('genre'))
 async def process_genres(call: types.CallbackQuery):
