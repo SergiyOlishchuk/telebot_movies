@@ -56,19 +56,19 @@ class DataBase:
         
         sql_request = 'SELECT name, genre, year, link FROM movies '
         
-        if genres:
+        if genres and len(genres) > 0:
             genres_tuple_str = '('
             for genre in genres:
                 genres_tuple_str += f"LOWER('{genre}'), "
             sql_request += 'WHERE LOWER(genre) IN ' + genres_tuple_str[:-2] + ') '
 
 
-        if years:
+        if years and len(years) > 0:
             years_tuple_str = '('
             for year in years:
                 years_tuple_str += f"{year}, "
 
-            if genres:
+            if genres and len(genres) > 0:
                 sql_request += 'AND year IN ' + years_tuple_str[:-2] + ') '
             else:
                 sql_request += 'WHERE year IN ' + years_tuple_str[:-2] + ') '
