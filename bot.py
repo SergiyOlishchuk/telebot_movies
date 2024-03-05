@@ -24,7 +24,9 @@ class FSMMovies(StatesGroup):
     years = State()
 
 db = DataBase()
+#!!!!!!!!!!
 selected_movies = {}
+
 
 movies_inline_keyboard = InlineKeyboardMarkup()
 movies_inline_keyboard.add(InlineKeyboardButton('Повністю випадковий фільм', callback_data='movie all'))
@@ -39,8 +41,10 @@ for i in range(0, len(genres_btns), 3):
     genres_inline_keyboard.row(*genres_btns[i:i+3])
 
 genres_inline_keyboard.add(InlineKeyboardButton('Готово', callback_data='genre ready'))
+#!!!!!!!!!
 
 selected_genres = {}
+#!!!!!!!!!!!!!
 genres_text = 'Виберіть протрібні вам жанри'
 
 years = db.get_years()
@@ -54,7 +58,7 @@ years_inline_keyboard.add(InlineKeyboardButton('Готово', callback_data='ye
 
 selected_years = {}
 years_text = 'Виберіть потрібні вам роки'
-
+#!!!!!!!!!!!!!!
 @dp.message_handler(commands=['start'])
 async def start_command(message: types.Message):
     await message.reply('Привіт\nЯ бот для вибору фільмів\nНапиши /help, щоб дізнатися мої команди')
@@ -146,7 +150,7 @@ async def cancel_state(message: types.Message, state: FSMContext):
     
     await state.finish()
     await bot.send_message(message.chat.id, 'Вибір параметрів успішно зупиненний')
-
+#!!!!!!!!!!!!!!!!!!!!!
 @dp.callback_query_handler(lambda c: c.data and c.data == 'movie genre')
 async def process_callback_movie_genre(call: types.CallbackQuery):
     await bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
@@ -164,7 +168,7 @@ async def process_callback_movie_year(call: types.CallbackQuery):
     selected_years[call.from_user.id] = []
     
     await bot.send_message(call.message.chat.id, years_text, reply_markup=years_inline_keyboard)
-
+#!!!!!!!!!!!!!!!!!!!!!
 @dp.callback_query_handler(lambda c: c.data and c.data.startswith('year'))
 async def process_years(call: types.CallbackQuery):
     call_year = call.data.split(' ', maxsplit=2)[-1]
